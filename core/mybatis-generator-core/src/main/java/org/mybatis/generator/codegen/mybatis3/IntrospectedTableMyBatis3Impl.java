@@ -1,5 +1,5 @@
 /**
- *    Copyright 2006-2018 the original author or authors.
+ *    Copyright 2006-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,14 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.GeneratedKotlinFile;
 import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.ProgressCallback;
 import org.mybatis.generator.api.dom.java.CompilationUnit;
+import org.mybatis.generator.api.dom.kotlin.KotlinFile;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.codegen.AbstractGenerator;
 import org.mybatis.generator.codegen.AbstractJavaClientGenerator;
 import org.mybatis.generator.codegen.AbstractJavaGenerator;
+import org.mybatis.generator.codegen.AbstractKotlinGenerator;
 import org.mybatis.generator.codegen.AbstractXmlGenerator;
 import org.mybatis.generator.codegen.mybatis3.javamapper.AnnotatedClientGenerator;
 import org.mybatis.generator.codegen.mybatis3.javamapper.JavaMapperGenerator;
@@ -48,6 +51,8 @@ import org.mybatis.generator.internal.util.StringUtility;
 public class IntrospectedTableMyBatis3Impl extends IntrospectedTable {
     
     protected List<AbstractJavaGenerator> javaGenerators = new ArrayList<>();
+
+    protected List<AbstractKotlinGenerator> kotlinGenerators = new ArrayList<>();
 
     protected AbstractXmlGenerator xmlMapperGenerator;
 
@@ -186,6 +191,24 @@ public class IntrospectedTableMyBatis3Impl extends IntrospectedTable {
         return answer;
     }
 
+    @Override
+    public List<GeneratedKotlinFile> getGeneratedKotlinFiles() {
+        List<GeneratedKotlinFile> answer = new ArrayList<>();
+
+        for (AbstractKotlinGenerator kotlinGenerator : kotlinGenerators) {
+            List<KotlinFile> kotlinFiles = kotlinGenerator.getKotlinFiles();
+            for (KotlinFile kotlinFile : kotlinFiles) {
+                GeneratedKotlinFile gjf = new GeneratedKotlinFile(kotlinFile,
+                                kotlinGenerator.getProject(),
+                                context.getProperty(PropertyRegistry.CONTEXT_KOTLIN_FILE_ENCODING),
+                                context.getKotlinFormatter());
+                answer.add(gjf);
+            }
+        }
+
+        return answer;
+    }
+
     protected String getClientProject() {
         return context.getJavaClientGeneratorConfiguration().getTargetProject();        
     }
@@ -195,7 +218,8 @@ public class IntrospectedTableMyBatis3Impl extends IntrospectedTable {
     }
     
     protected String getExampleProject() {
-        String project = context.getJavaModelGeneratorConfiguration().getProperty(PropertyRegistry.MODEL_GENERATOR_EXAMPLE_PROJECT);
+        String project = context.getJavaModelGeneratorConfiguration().getProperty(
+                PropertyRegistry.MODEL_GENERATOR_EXAMPLE_PROJECT);
         
         if (StringUtility.stringHasValue(project)) {
             return project;

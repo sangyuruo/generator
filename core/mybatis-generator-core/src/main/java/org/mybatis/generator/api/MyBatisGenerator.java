@@ -1,5 +1,5 @@
 /**
- *    Copyright 2006-2018 the original author or authors.
+ *    Copyright 2006-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -55,23 +55,19 @@ import org.mybatis.generator.internal.XmlFileMergerJaxp;
  */
 public class MyBatisGenerator {
 
-    /** The configuration. */
     private Configuration configuration;
 
-    /** The shell callback. */
     private ShellCallback shellCallback;
 
-    /** The generated java files. */
-    private List<GeneratedJavaFile> generatedJavaFiles;
+    private List<GeneratedJavaFile> generatedJavaFiles = new ArrayList<>();
 
-    /** The generated xml files. */
-    private List<GeneratedXmlFile> generatedXmlFiles;
+    private List<GeneratedXmlFile> generatedXmlFiles = new ArrayList<>();
 
-    /** The warnings. */
+    private List<GeneratedKotlinFile> generatedKotlinFiles = new ArrayList<>();
+    
     private List<String> warnings;
 
-    /** The projects. */
-    private Set<String> projects;
+    private Set<String> projects = new HashSet<>();
 
     /**
      * Constructs a MyBatisGenerator object.
@@ -112,9 +108,6 @@ public class MyBatisGenerator {
         } else {
             this.warnings = warnings;
         }
-        generatedJavaFiles = new ArrayList<>();
-        generatedXmlFiles = new ArrayList<>();
-        projects = new HashSet<>();
 
         this.configuration.validate();
     }
@@ -229,7 +222,7 @@ public class MyBatisGenerator {
 
         // calculate the contexts to run
         List<Context> contextsToRun;
-        if (contextIds == null || contextIds.size() == 0) {
+        if (contextIds == null || contextIds.isEmpty()) {
             contextsToRun = configuration.getContexts();
         } else {
             contextsToRun = new ArrayList<>();
@@ -241,7 +234,7 @@ public class MyBatisGenerator {
         }
 
         // setup custom classloader if required
-        if (configuration.getClassPathEntries().size() > 0) {
+        if (!configuration.getClassPathEntries().isEmpty()) {
             ClassLoader classLoader = getCustomClassloader(configuration.getClassPathEntries());
             ObjectFactory.addExternalClassLoader(classLoader);
         }
@@ -267,7 +260,7 @@ public class MyBatisGenerator {
 
         for (Context context : contextsToRun) {
             context.generateFiles(callback, generatedJavaFiles,
-                    generatedXmlFiles, warnings);
+                    generatedXmlFiles, generatedKotlinFiles, warnings);
         }
 
         // now save the files
@@ -283,6 +276,11 @@ public class MyBatisGenerator {
             for (GeneratedJavaFile gjf : generatedJavaFiles) {
                 projects.add(gjf.getTargetProject());
                 writeGeneratedJavaFile(gjf, callback);
+            }
+
+            for (GeneratedKotlinFile gkf : generatedKotlinFiles) {
+                projects.add(gkf.getTargetProject());
+                writeGeneratedKotlinFile(gkf, callback);
             }
 
             for (String project : projects) {
@@ -305,7 +303,7 @@ public class MyBatisGenerator {
                 if (shellCallback.isMergeSupported()) {
                     source = shellCallback.mergeJavaFile(gjf
                             .getFormattedContent(), targetFile,
-                            MergeConstants.OLD_ELEMENT_TAGS,
+                            MergeConstants.getOldElementTags(),
                             gjf.getFileEncoding());
                 } else if (shellCallback.isOverwriteEnabled()) {
                     source = gjf.getFormattedContent();
@@ -326,6 +324,39 @@ public class MyBatisGenerator {
             callback.startTask(getString(
                     "Progress.15", targetFile.getName())); //$NON-NLS-1$
             writeFile(targetFile, source, gjf.getFileEncoding());
+        } catch (ShellException e) {
+            warnings.add(e.getMessage());
+        }
+    }
+
+    private void writeGeneratedKotlinFile(GeneratedKotlinFile gkf, ProgressCallback callback)
+            throws InterruptedException, IOException {
+        File targetFile;
+        String source;
+        try {
+            File directory = shellCallback.getDirectory(gkf
+                    .getTargetProject(), gkf.getTargetPackage());
+            targetFile = new File(directory, gkf.getFileName());
+            if (targetFile.exists()) {
+                if (shellCallback.isOverwriteEnabled()) {
+                    source = gkf.getFormattedContent();
+                    warnings.add(getString("Warning.11", //$NON-NLS-1$
+                            targetFile.getAbsolutePath()));
+                } else {
+                    source = gkf.getFormattedContent();
+                    targetFile = getUniqueFileName(directory, gkf
+                            .getFileName());
+                    warnings.add(getString(
+                            "Warning.2", targetFile.getAbsolutePath())); //$NON-NLS-1$
+                }
+            } else {
+                source = gkf.getFormattedContent();
+            }
+
+            callback.checkCancel();
+            callback.startTask(getString(
+                    "Progress.15", targetFile.getName())); //$NON-NLS-1$
+            writeFile(targetFile, source, gkf.getFileEncoding());
         } catch (ShellException e) {
             warnings.add(e.getMessage());
         }
@@ -388,9 +419,9 @@ public class MyBatisGenerator {
             osw = new OutputStreamWriter(fos, fileEncoding);
         }
 
-        BufferedWriter bw = new BufferedWriter(osw);
-        bw.write(content);
-        bw.close();
+        try (BufferedWriter bw = new BufferedWriter(osw)) {
+            bw.write(content);
+        }
     }
 
     /**
@@ -437,6 +468,17 @@ public class MyBatisGenerator {
      */
     public List<GeneratedJavaFile> getGeneratedJavaFiles() {
         return generatedJavaFiles;
+    }
+
+    /**
+     * Returns the list of generated Kotlin files after a call to one of the generate methods.
+     * This is useful if you prefer to process the generated files yourself and do not want
+     * the generator to write them to disk.
+     *  
+     * @return the list of generated Kotlin files
+     */
+    public List<GeneratedKotlinFile> getGeneratedKotlinFiles() {
+        return generatedKotlinFiles;
     }
 
     /**

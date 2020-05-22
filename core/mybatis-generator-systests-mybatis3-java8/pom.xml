@@ -1,6 +1,6 @@
 <!--
 
-       Copyright 2006-2018 the original author or authors.
+       Copyright 2006-2019 the original author or authors.
 
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.mybatis.generator</groupId>
     <artifactId>mybatis-generator</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.4.1-SNAPSHOT</version>
   </parent>
   <artifactId>mybatis-generator-systests-mybatis3-java8</artifactId>
   <description>Tests for the MyBatis3 code generator using Java8 Features.</description>
@@ -95,6 +95,13 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <configuration>
+          <skipSource>true</skipSource>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
           <skip>true</skip>
         </configuration>
       </plugin>
@@ -132,6 +139,11 @@
       <groupId>org.mybatis.dynamic-sql</groupId>
       <artifactId>mybatis-dynamic-sql</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <profiles>
     <profile>
@@ -155,7 +167,7 @@
                 </goals>
                 <configuration>
                   <sources>
-                    <source>target/generated-sources/mybatis-generator</source>
+                    <source>${project.build.directory}/generated-sources/mybatis-generator</source>
                   </sources>
                 </configuration>
               </execution>

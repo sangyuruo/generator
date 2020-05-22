@@ -1,5 +1,5 @@
 /**
- *    Copyright 2006-2018 the original author or authors.
+ *    Copyright 2006-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -29,10 +29,12 @@ import java.util.Set;
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.ConnectionFactory;
 import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.GeneratedKotlinFile;
 import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.JavaFormatter;
 import org.mybatis.generator.api.JavaTypeResolver;
+import org.mybatis.generator.api.KotlinFormatter;
 import org.mybatis.generator.api.Plugin;
 import org.mybatis.generator.api.ProgressCallback;
 import org.mybatis.generator.api.XmlFormatter;
@@ -80,6 +82,8 @@ public class Context extends PropertyHolder {
     private Boolean autoDelimitKeywords;
 
     private JavaFormatter javaFormatter;
+
+    private KotlinFormatter kotlinFormatter;
 
     private XmlFormatter xmlFormatter;
     
@@ -176,7 +180,7 @@ public class Context extends PropertyHolder {
             }
         }
 
-        if (tableConfigurations.size() == 0) {
+        if (tableConfigurations.isEmpty()) {
             errors.add(getString("ValidationError.3", id)); //$NON-NLS-1$
         } else {
             for (int i = 0; i < tableConfigurations.size(); i++) {
@@ -271,6 +275,14 @@ public class Context extends PropertyHolder {
         }
 
         return javaFormatter;
+    }
+
+    public KotlinFormatter getKotlinFormatter() {
+        if (kotlinFormatter == null) {
+            kotlinFormatter = ObjectFactory.createKotlinFormatter(this);
+        }
+
+        return kotlinFormatter;
     }
 
     public XmlFormatter getXmlFormatter() {
@@ -382,7 +394,7 @@ public class Context extends PropertyHolder {
                                 .getSchema(), tc.getTableName(), '.');
 
                 if (fullyQualifiedTableNames != null
-                        && fullyQualifiedTableNames.size() > 0
+                        && !fullyQualifiedTableNames.isEmpty()
                         && !fullyQualifiedTableNames.contains(tableName)) {
                     continue;
                 }
@@ -421,7 +433,9 @@ public class Context extends PropertyHolder {
 
     public void generateFiles(ProgressCallback callback,
             List<GeneratedJavaFile> generatedJavaFiles,
-            List<GeneratedXmlFile> generatedXmlFiles, List<String> warnings)
+            List<GeneratedXmlFile> generatedXmlFiles,
+            List<GeneratedKotlinFile> generatedKotlinFiles,
+            List<String> warnings)
             throws InterruptedException {
 
         pluginAggregator = new PluginAggregator();
@@ -446,11 +460,15 @@ public class Context extends PropertyHolder {
                         .getGeneratedJavaFiles());
                 generatedXmlFiles.addAll(introspectedTable
                         .getGeneratedXmlFiles());
+                generatedKotlinFiles.addAll(introspectedTable
+                        .getGeneratedKotlinFiles());
 
                 generatedJavaFiles.addAll(pluginAggregator
                         .contextGenerateAdditionalJavaFiles(introspectedTable));
                 generatedXmlFiles.addAll(pluginAggregator
                         .contextGenerateAdditionalXmlFiles(introspectedTable));
+                generatedKotlinFiles.addAll(pluginAggregator
+                        .contextGenerateAdditionalKotlinFiles(introspectedTable));
             }
         }
 
@@ -458,6 +476,8 @@ public class Context extends PropertyHolder {
                 .contextGenerateAdditionalJavaFiles());
         generatedXmlFiles.addAll(pluginAggregator
                 .contextGenerateAdditionalXmlFiles());
+        generatedKotlinFiles.addAll(pluginAggregator
+                .contextGenerateAdditionalKotlinFiles());
     }
 
     private Connection getConnection() throws SQLException {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-       Copyright 2006-2018 the original author or authors.
+       Copyright 2006-2019 the original author or authors.
 
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
@@ -49,7 +49,13 @@ specify this element, then MyBatis Generator (MBG) will not generate Java client
         predefined generators:</p>
         <table cellpadding="5">
           <tr>
-            <td colspan="2">If the &lt;context&gt; targetRuntime is <b>MyBatis3</b>:</td>
+            <td colspan="2">If the &lt;context&gt; targetRuntime is <b>MyBatis3DynamicSql</b> this attribute is optional and ignored.</td>
+          </tr>
+          <tr>
+            <td colspan="2">If the &lt;context&gt; targetRuntime is <b>MyBatis3Kotlin</b> this attribute is optional and ignored.</td>
+          </tr>
+          <tr>
+            <td colspan="2">If the &lt;context&gt; targetRuntime is <b>MyBatis3</b> the following predefined values can be used:</td>
           </tr>
           <tr>
             <th nowrap="nowrap" valign="top">ANNOTATEDMAPPER</th>
@@ -75,7 +81,7 @@ specify this element, then MyBatis Generator (MBG) will not generate Java client
             infrastructure.  The interfaces will be dependent on generated XML mapper files.</td>
           </tr>
           <tr>
-            <td colspan="2">If the &lt;context&gt; targetRuntime is <b>MyBatis3Simple</b>:</td>
+            <td colspan="2">If the &lt;context&gt; targetRuntime is <b>MyBatis3Simple</b> the following predefined values can be used:</td>
           </tr>
           <tr>
             <th nowrap="nowrap" valign="top">ANNOTATEDMAPPER</th>
@@ -118,26 +124,6 @@ specify this element, then MyBatis Generator (MBG) will not generate Java client
         In other environments, this value should be an existing directory
         on the local file system.  MBG will not create this directory if
         it does not exist.</td>
-  </tr>
-</table>
-
-<h2>Optional Attributes</h2>
-<table border="1" cellspacing="0" cellpadding="5">
-  <tr>
-    <th>Attribute</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td valign="top">implementationPackage</td>
-    <td>If specified, implementation classes will be placed in this package.
-        In the default generators, the property "enableSubPackages"
-        controls how the actual package is calculated.  If true,
-        then the calculated package will be the implementationPackage plus
-        sub packages for the table's catalog and schema if they exist.
-        If "enableSubPackages" is false (the default) then the calculated package will be
-        exactly what is specified in the implementationPackage attribute.
-        MBG will create folders as required for the generated
-        packages.</td>
   </tr>
 </table>
 
